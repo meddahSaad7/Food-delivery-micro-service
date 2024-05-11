@@ -6,6 +6,7 @@ import { PrismaService } from '../../../prisma/Prisma.service';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from './email/email.service';
+import { TokenSender } from './utils/sendToken';
 interface UserData {
   name: string;
   email: string;
@@ -113,16 +114,31 @@ export class UsersService {
     );
     return { token, activationCode };
   }
-  // login user service
-  async login(loginDto: LoginDto) {
+
+  // Login user service
+  async Login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    const user = {
-      email,
-      password,
-    };
-    return user;
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (user && (await this.comparePassword(password, user.password))) {
+      const tokenSender = new TokenSender(this.configService, this.jwtService);
+      tokenSender.sendToken(user);
+    } else {
+      throw new BadRequestException('Invalid credentials');
+    }
   }
 
+  async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
+  }
+
+  // Get all users
   async getUsers() {
     return this.prisma.user.findMany({});
   }

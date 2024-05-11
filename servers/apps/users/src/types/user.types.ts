@@ -32,6 +32,12 @@ export class LoginResponse {
   @Field(() => User)
   user: User;
 
+  @Field()
+  accessToken: string;
+
+  @Field()
+  refreshToken: string;
+
   @Field(() => ErrorType, { nullable: true })
   error?: ErrorType;
 }
