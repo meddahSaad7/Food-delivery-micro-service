@@ -29,12 +29,9 @@ export class UsersResolver {
     @Args('activationDto') activationDto: ActivationDto,
     @Context() context: { res: Response },
   ): Promise<ActivationResponse> {
-    const user = await this.userService.activateUser(
-      activationDto,
-      context.res,
-    );
-    return { user };
+    return await this.userService.activateUser(activationDto, context.res);
   }
+
   @Query(() => [User])
   async getUsers() {
     return this.userService.getUsers();

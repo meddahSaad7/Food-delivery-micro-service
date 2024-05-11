@@ -65,7 +65,6 @@ export class UsersService {
       activationCode,
     });
 
-    console.log(activation_token, response, 'activation_token.......');
     return { activation_token, response };
   }
   // activation user
@@ -96,7 +95,7 @@ export class UsersService {
         phone_number,
       },
     });
-    console.log(user, 'user.............');
+
     return { user, response };
   }
   // create activation token
