@@ -16,6 +16,7 @@ export class TokenSender {
         secret: this.config.get<string>('ACCESS_TOKEN_SECRET'),
       },
     );
+
     const refreshToken = this.jwt.sign(
       {
         id: user.id,
@@ -25,6 +26,7 @@ export class TokenSender {
         expiresIn: '3d',
       },
     );
+
     return { user, accessToken, refreshToken };
   }
 }

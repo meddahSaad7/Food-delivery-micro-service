@@ -11,7 +11,7 @@ interface UserData {
   name: string;
   email: string;
   password: string;
-  phone_number: number;
+  phone_number: string;
 }
 
 @Injectable()
@@ -123,11 +123,19 @@ export class UsersService {
         email,
       },
     });
+
     if (user && (await this.comparePassword(password, user.password))) {
       const tokenSender = new TokenSender(this.configService, this.jwtService);
-      tokenSender.sendToken(user);
+      return tokenSender.sendToken(user);
     } else {
-      throw new BadRequestException('Invalid credentials');
+      return {
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        error: {
+          message: 'Invalid email or password',
+        },
+      };
     }
   }
 
@@ -137,7 +145,15 @@ export class UsersService {
   ): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
   }
-
+  // Get logged in user
+  async getLoggedInUser(req: any) {
+    // console.log(req.headers, 'req............');
+    const user = req.headers.user;
+    const refreshToken = req.headers.refreshtoken;
+    const accessToken = req.headers.accesstoken;
+    // console.log(user, refreshToken, accessToken, '..............');
+    return { user, accessToken, refreshToken };
+  }
   // Get all users
   async getUsers() {
     return this.prisma.user.findMany({});
