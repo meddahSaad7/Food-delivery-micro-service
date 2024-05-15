@@ -6,11 +6,12 @@ import { PrismaService } from '../../../prisma/Prisma.service';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from './email/email.service';
+import { TokenSender } from './utils/sendToken';
 interface UserData {
   name: string;
   email: string;
   password: string;
-  phone_number: number;
+  phone_number: string;
 }
 
 @Injectable()
@@ -113,16 +114,47 @@ export class UsersService {
     );
     return { token, activationCode };
   }
-  // login user service
-  async login(loginDto: LoginDto) {
+
+  // Login user service
+  async Login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    const user = {
-      email,
-      password,
-    };
-    return user;
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (user && (await this.comparePassword(password, user.password))) {
+      const tokenSender = new TokenSender(this.configService, this.jwtService);
+      return tokenSender.sendToken(user);
+    } else {
+      return {
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        error: {
+          message: 'Invalid email or password',
+        },
+      };
+    }
   }
 
+  async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
+  }
+  // Get logged in user
+  async getLoggedInUser(req: any) {
+    // console.log(req.headers, 'req............');
+    const user = req.headers.user;
+    const refreshToken = req.headers.refreshtoken;
+    const accessToken = req.headers.accesstoken;
+    // console.log(user, refreshToken, accessToken, '..............');
+    return { user, accessToken, refreshToken };
+  }
+  // Get all users
   async getUsers() {
     return this.prisma.user.findMany({});
   }
