@@ -138,7 +138,12 @@ export class UsersService {
       };
     }
   }
-
+  async Logout(req: any) {
+    req.user = null;
+    req.refreshtoken = null;
+    req.accesstoken = null;
+    return { message: 'Logged out successfully!' };
+  }
   async comparePassword(
     password: string,
     hashedPassword: string,
